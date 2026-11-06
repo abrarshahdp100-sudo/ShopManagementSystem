@@ -1,0 +1,572 @@
+﻿<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Shop POS Terminal</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+                tailwind.config = {
+                    darkMode: 'class',
+                    theme: {
+                        extend: {
+                            fontFamily: {
+                                sans: ['Inter', 'sans-serif'],
+                            },
+                            colors: {
+                                darkblue: { 900: '#0b192c', 800: '#1e3e62', 700: '#0f172a' }
+                            }
+                        }
+                    }
+                }
+    </script>
+</head>
+<body class="bg-darkblue-900 text-slate-100 font-sans min-h-screen flex flex-col relative antialiased">
+
+    <!-- Secure Admin Access Modal (Password Protected) -->
+    <div id="adminPinModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 hidden backdrop-blur-sm">
+        <div class="bg-darkblue-800 border-2 border-indigo-500/50 rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl text-center">
+            <div class="bg-indigo-600/20 text-indigo-400 w-14 h-14 rounded-2xl mx-auto flex items-center justify-center text-2xl border border-indigo-500/30">
+                <i class="fa-solid fa-user-shield"></i>
+            </div>
+            <div>
+                <h3 class="font-black text-white text-base uppercase">Admin Panel Lock</h3>
+                <p class="text-xs text-slate-400 mt-1">Admin Panel kholne ke liye Owner Password likhein</p>
+            </div>
+            <input type="password" id="adminSecurityPin" placeholder="Owner Password" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-xs font-bold text-white text-center focus:outline-none focus:border-indigo-500">
+            <div class="flex gap-2">
+                <button onclick="closeAdminPinModal()" class="w-1/2 bg-slate-700 hover:bg-slate-600 text-white font-bold py-2.5 rounded-xl text-xs">Cancel</button>
+                <button onclick="verifyAdminPin()" class="w-1/2 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-2.5 rounded-xl text-xs">Verify</button>
+            </div>
+            <p id="adminPinError" class="text-xs text-rose-400 font-bold hidden">⚠️ Ghalat Password!</p>
+        </div>
+    </div>
+
+    <!-- Secure Password Login Overlay -->
+    <div id="loginOverlay" class="fixed inset-0 bg-darkblue-900/95 z-50 flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-darkblue-800 border-2 border-emerald-500/50 rounded-3xl p-8 max-w-md w-full shadow-2xl space-y-6 text-center">
+            <div class="bg-emerald-600/20 text-emerald-400 w-16 h-16 rounded-2xl mx-auto flex items-center justify-center text-3xl border border-emerald-500/30 shadow-lg">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div>
+                <h2 class="text-xl font-black text-white uppercase tracking-wider">SECURE POS TERMINAL</h2>
+                <p class="text-xs text-slate-400 mt-1 font-bold">Apni Shop Select Karein aur Password Darj Karein</p>
+            </div>
+
+            <div class="space-y-4 text-left">
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1">1. Apni Shop / Branch Select Karein</label>
+                    <select id="terminalShopSelect" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-amber-400 focus:outline-none focus:border-emerald-500">
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1">2. Shop Ka Password Likhein</label>
+                    <input type="password" id="staffPinInput" placeholder="Password yahan likhein" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:border-emerald-500">
+                </div>
+
+                <button onclick="verifyStaffLogin()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl shadow-xl transition text-base">
+                    <i class="fa-solid fa-key mr-2"></i> POS Unlock Karein & Shop Kholein
+                </button>
+            </div>
+            <p id="loginError" class="text-xs text-rose-400 font-bold hidden">⚠️ Ghalat Password!</p>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-darkblue-800 border-b border-slate-700 px-6 py-4 flex flex-wrap justify-between items-center shadow-xl gap-4">
+        <div class="flex items-center space-x-3">
+            <div class="bg-blue-600 p-2.5 rounded-xl text-white text-2xl shadow-lg">
+                <i class="fa-solid fa-store"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-extrabold tracking-wide">Smart Shop POS</h1>
+                <p id="activeStaffDisplay" class="text-xs text-emerald-400 font-bold">Operator: Logged In</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <div class="bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-700 text-right">
+                <span class="text-[9px] text-slate-400 block uppercase font-black">Aaj Ki Bikri (Revenue)</span>
+                <span id="todayRevenueDisplay" class="text-sm font-black text-emerald-400">Rs. 0</span>
+            </div>
+            <div class="bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-700 text-right">
+                <span class="text-[9px] text-slate-400 block uppercase font-black">Transactions</span>
+                <span id="todayTxCount" class="text-sm font-black text-blue-400">0 Sales</span>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-4">
+            <!-- Secure Admin Button with Password Verification -->
+            <button onclick="promptAdminPassword()" class="bg-indigo-600/80 hover:bg-indigo-600 text-white text-xs font-extrabold px-4 py-2.5 rounded-xl shadow transition flex items-center gap-1.5 border border-indigo-500/40">
+                <i class="fa-solid fa-lock text-indigo-300"></i> Admin Panel
+            </button>
+            <button onclick="lockTerminal()" class="bg-rose-600 hover:bg-rose-500 text-white text-xs font-extrabold px-4 py-2.5 rounded-xl shadow">
+                <i class="fa-solid fa-lock mr-1"></i> Shop Band Karein & Lock
+            </button>
+            <div class="text-right bg-slate-900 px-4 py-2 rounded-xl border border-slate-700">
+                <span class="text-[9px] text-slate-400 block uppercase font-black">Live Waqt</span>
+                <span id="liveClock" class="text-sm font-bold text-emerald-400">--:--:--</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 p-6 max-w-[1600px] mx-auto w-full space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+            <!-- POS Billing & Products Section -->
+            <div class="bg-darkblue-800 border border-slate-700 rounded-3xl p-6 shadow-2xl lg:col-span-3 space-y-6">
+                <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                    <h2 class="font-bold text-lg text-emerald-400"><i class="fa-solid fa-scale-balanced mr-2"></i> Khula Tail & Packets Billing</h2>
+                    <span id="shopBranchBadge" class="text-xs bg-emerald-500/20 text-emerald-300 font-bold px-3 py-1 rounded-full">Branch Selected</span>
+                </div>
+
+                <!-- Loose Tail Calculator -->
+                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-700 space-y-4 shadow-inner">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-sm font-bold text-slate-200">1. Khula Tail (Rupees se wazan nikalen):</h3>
+                        <span id="looseStockBadge" class="text-xs bg-blue-500/20 text-blue-300 px-3 py-1 rounded-lg font-bold border border-blue-500/30">Total Stock: 0.0 Kg</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Item Select Karein</label>
+                            <select id="looseProductSelect" onchange="calculateWeight()" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-3 py-2.5 text-sm text-white font-bold focus:outline-none focus:border-blue-500">
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Gahak Kitne Paise De Raha Hai?</label>
+                            <input type="number" id="customerAmount" value="130" oninput="calculateWeight()" placeholder="e.g. 130" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-3 py-2 text-base text-white font-black text-emerald-400 focus:outline-none focus:border-emerald-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Nikla Hua Wazan:</label>
+                            <div class="bg-slate-800 border border-slate-600 rounded-xl px-3 py-2 text-base font-black text-blue-400 flex items-center justify-between">
+                                <span id="calculatedWeightDisplay">0.000 Kg</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="addLooseToCart()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold py-3 rounded-xl transition text-sm shadow-lg flex justify-center items-center gap-2">
+                        <i class="fa-solid fa-cart-plus"></i> Khula Tail Cart Mein Dalen
+                    </button>
+                </div>
+
+                <!-- Products Search Grid -->
+                <div class="space-y-4">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-900 p-3.5 rounded-2xl border border-slate-700">
+                        <div class="flex-1 relative">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                            <input type="text" id="searchInput" onkeyup="filterProducts()" placeholder="Products search karein..." class="w-full bg-slate-800 border border-slate-600 rounded-xl pl-10 pr-3 py-2 text-sm font-bold text-white placeholder-slate-400 focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-slate-400 font-bold whitespace-nowrap">Tadad (Qty):</span>
+                            <input type="number" id="packetQtyInput" value="1" min="1" class="w-14 bg-slate-800 border border-slate-600 rounded-xl text-center py-1.5 text-sm font-bold text-white focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div id="productsGrid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cart Section -->
+            <div class="bg-darkblue-800 border border-slate-700 rounded-3xl p-6 shadow-2xl flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-center border-b border-slate-700 pb-3 mb-4">
+                        <h2 class="font-bold text-base text-white"><i class="fa-solid fa-receipt mr-2 text-blue-400"></i> Maujuda Bill</h2>
+                        <button onclick="clearCart()" class="text-xs font-bold text-rose-400 hover:underline">Sab Khatam Karein</button>
+                    </div>
+
+                    <div id="cartItemsList" class="space-y-3 max-h-[420px] overflow-y-auto pr-2">
+                        <p class="text-xs text-slate-400 text-center py-12 font-medium">Cart khali hai. Item add karein.</p>
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-700 pt-4 mt-4 space-y-3">
+                    <div class="flex justify-between text-sm font-bold">
+                        <span class="text-slate-300">Kul Items:</span>
+                        <span id="cartCount" class="text-white">0</span>
+                    </div>
+                    <div class="flex justify-between text-lg font-black">
+                        <span class="text-slate-100">Kul Raqam (Total):</span>
+                        <span id="cartTotal" class="text-emerald-400 text-xl">Rs. 0</span>
+                    </div>
+                    <button onclick="checkoutSale()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-3 rounded-2xl shadow-xl transition text-base tracking-wide">
+                        <i class="fa-solid fa-check-circle mr-1"></i> Sale Complete Karein
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- JavaScript Logic -->
+    <script>
+                // @ts-nocheck
+                setInterval(() => {
+                    document.getElementById('liveClock').innerText = new Date().toLocaleTimeString();
+                }, 1000);
+
+                let currentUnlockedShop = "";
+                let currentShopId = "";
+                let productsStock = [];
+                let looseOilItems = [];
+                let totalRevenueToday = 0;
+                let totalSalesCount = 0;
+
+                window.onload = function() {
+                    populateLoginShops();
+                    populateLooseOilOptions();
+                };
+
+                function promptAdminPassword() {
+                    document.getElementById('adminSecurityPin').value = '';
+                    document.getElementById('adminPinError').classList.add('hidden');
+                    document.getElementById('adminPinModal').classList.remove('hidden');
+                }
+
+                function closeAdminPinModal() {
+                    document.getElementById('adminPinModal').classList.add('hidden');
+                }
+
+                function verifyAdminPin() {
+                    const entered = document.getElementById('adminSecurityPin').value.trim();
+                    // Default master password or check against any registered shop pin / owner master password
+                    // Aap apna secure owner password yahan set kar sakte hain (e.g., "admin123" ya koi bhi)
+                    const masterPass = "admin123";
+
+                    if (entered === masterPass) {
+                        closeAdminPinModal();
+                        window.location.href = "owner.html";
+                    } else {
+                        document.getElementById('adminPinError').classList.remove('hidden');
+                    }
+                }
+
+                function populateLooseOilOptions() {
+                    const selectEl = document.getElementById('looseProductSelect');
+                    looseOilItems = JSON.parse(localStorage.getItem('customLooseOils')) || [];
+
+                    if (looseOilItems.length === 0) {
+                        selectEl.innerHTML = `<option value="0">Koi Tail Add Nahi Hai</option>`;
+                        document.getElementById('looseStockBadge').innerText = `Total Stock: 0.0 Kg`;
+                        document.getElementById('calculatedWeightDisplay').innerText = `0.000 Kg`;
+                        return;
+                    }
+
+                    selectEl.innerHTML = looseOilItems.map(item =>
+                        `<option value="${item.rate}" data-id="${item.id}" data-name="${item.name}" data-stock="${item.stock}">
+                            ${item.name} (Rs. ${item.rate} / Kg)
+                        </option>`
+                    ).join('');
+
+                    updateSelectedLooseStockBadge();
+                    calculateWeight();
+                }
+
+                function updateSelectedLooseStockBadge() {
+                    const selectEl = document.getElementById('looseProductSelect');
+                    if (!selectEl.value || selectEl.value === "0" || looseOilItems.length === 0) {
+                        document.getElementById('looseStockBadge').innerText = `Total Stock: 0.0 Kg`;
+                        return;
+                    }
+
+                    const selectedOption = selectEl.options[selectEl.selectedIndex];
+                    if (selectedOption) {
+                        const stock = selectedOption.getAttribute('data-stock') || 0;
+                        document.getElementById('looseStockBadge').innerText = `Total Stock: ${stock} Kg`;
+                    }
+                }
+
+                function populateLoginShops() {
+                    const selectEl = document.getElementById('terminalShopSelect');
+                    const registeredShops = JSON.parse(localStorage.getItem('multiShopRegistry')) || [];
+
+                    if (registeredShops.length === 0) {
+                        selectEl.innerHTML = `<option value="">Koi Shop Registered Nahi Hai</option>`;
+                        return;
+                    }
+
+                    selectEl.innerHTML = registeredShops.map(s => `<option value="${s.id}" data-pass="${s.password}">${s.name}</option>`).join('');
+                }
+
+                function verifyStaffLogin() {
+                    const selectEl = document.getElementById('terminalShopSelect');
+                    if (!selectEl.value) {
+                        alert("Pehle Owner Dashboard se shop register karein!");
+                        return;
+                    }
+
+                    const selectedOption = selectEl.options[selectEl.selectedIndex];
+                    const expectedPass = selectedOption.getAttribute('data-pass');
+                    const shopName = selectedOption.text;
+                    const shopId = selectEl.value;
+
+                    const enteredPass = document.getElementById('staffPinInput').value.trim();
+                    const errorEl = document.getElementById('loginError');
+
+                    if (enteredPass !== expectedPass) {
+                        errorEl.innerText = `⚠️ Ghalat Password! '${shopName}' ka password alag hai.`;
+                        errorEl.classList.remove('hidden');
+                        return;
+                    }
+
+                    errorEl.classList.add('hidden');
+                    currentUnlockedShop = shopName;
+                    currentShopId = shopId;
+
+                    let now = new Date();
+                    let timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    let dateString = now.toLocaleDateString();
+
+                    let newRecord = {
+                        shopName: shopName,
+                        passwordUsed: enteredPass,
+                        time: timeString,
+                        date: dateString,
+                        type: 'OPENED'
+                    };
+
+                    let shopLogs = JSON.parse(localStorage.getItem('shopOpeningLogs')) || [];
+                    shopLogs.unshift(newRecord);
+                    localStorage.setItem('shopOpeningLogs', JSON.stringify(shopLogs));
+
+                    document.getElementById('loginOverlay').style.display = 'none';
+                    document.getElementById('activeStaffDisplay').innerText = `Terminal: ${shopName} (Active)`;
+                    document.getElementById('shopBranchBadge').innerText = `${shopName} Inventory`;
+
+                    loadShopSpecificProducts();
+                    populateLooseOilOptions();
+                }
+
+                function loadShopSpecificProducts() {
+                    const allCustomProducts = JSON.parse(localStorage.getItem('customShopProducts')) || [];
+                    productsStock = allCustomProducts.filter(p => p.shopId === currentShopId);
+                    renderProductsGrid();
+                }
+
+                function lockTerminal() {
+                    if (currentUnlockedShop) {
+                        let now = new Date();
+                        let timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                        let dateString = now.toLocaleDateString();
+
+                        let closeRecord = {
+                            shopName: currentUnlockedShop,
+                            passwordUsed: 'Locked',
+                            time: timeString,
+                            date: dateString,
+                            type: 'CLOSED'
+                        };
+
+                        let shopLogs = JSON.parse(localStorage.getItem('shopOpeningLogs')) || [];
+                        shopLogs.unshift(closeRecord);
+                        localStorage.setItem('shopOpeningLogs', JSON.stringify(shopLogs));
+                    }
+
+                    location.reload();
+                }
+
+                let cart = [];
+
+                function renderProductsGrid(filterText = '') {
+                    const grid = document.getElementById('productsGrid');
+                    const search = filterText.toLowerCase().trim();
+                    const filteredProducts = productsStock.filter(p => p.name.toLowerCase().includes(search));
+
+                    if (filteredProducts.length === 0) {
+                        grid.innerHTML = `<div class="col-span-full text-center py-6 text-slate-400 font-bold text-xs">Is shop par koi product nahi mila! Owner Dashboard se add karein.</div>`;
+                        return;
+                    }
+
+                    grid.innerHTML = filteredProducts.map(p => {
+                        const badgeColor = p.left <= 5
+                            ? "bg-rose-500/20 text-rose-400 border-rose-500/30"
+                            : "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
+
+                        return `
+                            <button onclick="addPacketToCart('${p.id}')" class="bg-slate-900 hover:bg-slate-700/80 p-3 rounded-xl border border-slate-700 text-left transition shadow hover:border-blue-500 relative flex flex-col justify-between">
+                                <div>
+                                    <div class="flex justify-between items-start">
+                                        <p class="text-xs font-bold text-slate-200 line-clamp-1">${p.name}</p>
+                                        <span class="text-[9px] ${badgeColor} font-black px-1.5 py-0.5 rounded border">${p.left}</span>
+                                    </div>
+                                    <p class="text-sm font-black text-emerald-400 mt-2">Rs. ${p.price.toLocaleString()}</p>
+                                </div>
+                                <p class="text-[9px] text-slate-400 mt-1">Bikay: ${p.sold}</p>
+                            </button>
+                        `;
+                    }).join('');
+                }
+
+                function filterProducts() {
+                    renderProductsGrid(document.getElementById('searchInput').value);
+                }
+
+                function calculateWeight() {
+                    updateSelectedLooseStockBadge();
+                    const selectEl = document.getElementById('looseProductSelect');
+                    if (!selectEl.value || selectEl.value === "0") {
+                        document.getElementById('calculatedWeightDisplay').innerText = `0.000 Kg`;
+                        return;
+                    }
+                    const rate = parseFloat(selectEl.value);
+                    const amount = parseFloat(document.getElementById('customerAmount').value) || 0;
+                    if (rate > 0 && amount > 0) {
+                        const weightInKg = (amount / rate).toFixed(3);
+                        document.getElementById('calculatedWeightDisplay').innerText = `${weightInKg} Kg / L`;
+                    } else {
+                        document.getElementById('calculatedWeightDisplay').innerText = `0.000 Kg`;
+                    }
+                }
+
+                function addLooseToCart() {
+                    const selectEl = document.getElementById('looseProductSelect');
+                    const rate = parseFloat(selectEl.value);
+                    if (!rate || rate <= 0) {
+                        alert("Pehle koi valid loose item select karein!");
+                        return;
+                    }
+
+                    const selectedOption = selectEl.options[selectEl.selectedIndex];
+                    const name = selectedOption.getAttribute('data-name');
+                    const looseId = selectedOption.getAttribute('data-id');
+                    const currentAvailableStock = parseFloat(selectedOption.getAttribute('data-stock'));
+                    const amount = parseFloat(document.getElementById('customerAmount').value) || 0;
+
+                    if (amount <= 0) {
+                        alert("Mahrbani karke sahi amount likhein!");
+                        return;
+                    }
+
+                    const weightInKg = parseFloat((amount / rate).toFixed(3));
+                    if (weightInKg > currentAvailableStock) {
+                        alert(`Stock kam hai! Sirf ${currentAvailableStock} Kg baaki hai.`);
+                        return;
+                    }
+
+                    cart.push({ id: looseId, type: 'loose', name: `${name} (${weightInKg} Kg)`, price: amount, weight: weightInKg });
+                    renderCart();
+                }
+
+                function addPacketToCart(id) {
+                    const qty = parseInt(document.getElementById('packetQtyInput').value) || 1;
+                    const p = productsStock.find(item => item.id === id);
+                    if (!p) return;
+                    if (qty > p.left) {
+                        alert(`Stock kam hai! Sirf ${p.left} packets baaki hain.`);
+                        return;
+                    }
+                    cart.push({ id: id, type: 'packet', name: qty > 1 ? `${p.name} (${qty}x)` : p.name, price: p.price * qty, qty: qty });
+                    renderCart();
+                    document.getElementById('packetQtyInput').value = 1;
+                }
+
+                function renderCart() {
+                    const listContainer = document.getElementById('cartItemsList');
+                    if (cart.length === 0) {
+                        listContainer.innerHTML = `<p class="text-xs text-slate-400 text-center py-12 font-medium">Cart khali hai. Item add karein.</p>`;
+                        document.getElementById('cartTotal').innerText = `Rs. 0`;
+                        document.getElementById('cartCount').innerText = `0`;
+                        return;
+                    }
+                    let total = 0;
+                    listContainer.innerHTML = cart.map((item, index) => {
+                        total += item.price;
+                        return `
+                            <div class="bg-slate-900 p-3 rounded-xl border border-slate-700/80 flex justify-between items-center text-xs shadow-sm">
+                                <div>
+                                    <p class="font-bold text-white">${item.name}</p>
+                                    <p class="text-emerald-400 font-extrabold mt-0.5">Rs. ${item.price.toLocaleString()}</p>
+                                </div>
+                                <button onclick="removeItem(${index})" class="text-rose-400 hover:text-rose-300 p-1 text-base">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        `;
+                    }).join('');
+                    document.getElementById('cartTotal').innerText = `Rs. ${total.toLocaleString()}`;
+                    document.getElementById('cartCount').innerText = cart.length;
+                }
+
+                function removeItem(index) {
+                    cart.splice(index, 1);
+                    renderCart();
+                }
+
+                function clearCart() {
+                    cart = [];
+                    renderCart();
+                }
+
+                function checkoutSale() {
+                    if (cart.length === 0) {
+                        alert("Cart khali hai!");
+                        return;
+                    }
+
+                    let customLooseOils = JSON.parse(localStorage.getItem('customLooseOils')) || [];
+
+                    cart.forEach(item => {
+                        if (item.type === 'loose') {
+                            const oil = customLooseOils.find(o => o.id === item.id);
+                            if (oil) {
+                                oil.stock = parseFloat((oil.stock - item.weight).toFixed(3));
+                                oil.soldAmount = (oil.soldAmount || 0) + item.price;
+                            }
+                        } else {
+                            const p = productsStock.find(prod => prod.id === item.id);
+                            if (p) {
+                                p.left -= item.qty;
+                                p.sold += item.qty;
+                            }
+                        }
+                    });
+
+                    localStorage.setItem('customLooseOils', JSON.stringify(customLooseOils));
+
+                    let allCustomProducts = JSON.parse(localStorage.getItem('customShopProducts')) || [];
+
+                    productsStock.forEach(updatedItem => {
+                        let index = allCustomProducts.findIndex(p => p.id === updatedItem.id);
+                        if (index !== -1) {
+                            allCustomProducts[index].left = updatedItem.left;
+                            allCustomProducts[index].sold = updatedItem.sold;
+                        }
+                    });
+
+                    localStorage.setItem('customShopProducts', JSON.stringify(allCustomProducts));
+
+                    let currentBillTotal = cart.reduce((sum, item) => sum + item.price, 0);
+                    totalRevenueToday += currentBillTotal;
+                    totalSalesCount += 1;
+
+                    let shopDailyRevenueMap = JSON.parse(localStorage.getItem('shopDailyRevenues')) || {};
+                    let currentShopDailyRevenue = shopDailyRevenueMap[currentUnlockedShop] || 0;
+                    shopDailyRevenueMap[currentUnlockedShop] = currentShopDailyRevenue + currentBillTotal;
+                    localStorage.setItem('shopDailyRevenues', JSON.stringify(shopDailyRevenueMap));
+
+                    let shopMonthlyRevenueMap = JSON.parse(localStorage.getItem('shopMonthlyRevenues')) || {};
+                    let currentShopMonthlyRevenue = shopMonthlyRevenueMap[currentUnlockedShop] || 0;
+                    shopMonthlyRevenueMap[currentUnlockedShop] = currentShopMonthlyRevenue + currentBillTotal;
+                    localStorage.setItem('shopMonthlyRevenues', JSON.stringify(shopMonthlyRevenueMap));
+
+                    document.getElementById('todayRevenueDisplay').innerText = `Rs. ${totalRevenueToday.toLocaleString()}`;
+                    document.getElementById('todayTxCount').innerText = `${totalSalesCount} Sales`;
+
+                    alert("✅ Sale Complete! Stock & Multi-tier Revenue permanently save ho gaya hai.");
+                    populateLooseOilOptions();
+                    renderProductsGrid(document.getElementById('searchInput').value);
+                    clearCart();
+                }
+    </script>
+</body>
+</html>

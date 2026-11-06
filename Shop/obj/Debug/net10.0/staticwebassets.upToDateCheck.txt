@@ -1,0 +1,4 @@
+wwwroot\owner.html
+wwwroot\index.html
+C:\Users\ADMIN\Desktop\Shop\Shop\wwwroot\owner.html
+C:\Users\ADMIN\Desktop\Shop\Shop\wwwroot\index.html

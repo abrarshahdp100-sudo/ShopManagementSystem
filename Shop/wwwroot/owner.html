@@ -1,0 +1,816 @@
+﻿<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Control Panel - Smart Shop Enterprise</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+                tailwind.config = {
+                    darkMode: 'class',
+                    theme: {
+                        extend: {
+                            fontFamily: {
+                                sans: ['Inter', 'sans-serif'],
+                            },
+                            colors: {
+                                darkblue: { 900: '#0b192c', 800: '#1e3e62', 700: '#0f172a' }
+                            }
+                        }
+                    }
+                }
+    </script>
+</head>
+<body class="bg-darkblue-900 text-slate-100 font-sans min-h-screen flex flex-col antialiased">
+
+    <!-- Edit Packet Product Modal -->
+    <div id="editProductModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 hidden backdrop-blur-sm">
+        <div class="bg-darkblue-800 border-2 border-indigo-500/50 rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="font-black text-white text-base"><i class="fa-solid fa-pen text-indigo-400 mr-2"></i> Edit Packet Product</h3>
+                <button onclick="closeEditModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <input type="hidden" id="editProdId">
+            <div class="space-y-3 text-left">
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1">Product Name</label>
+                    <input type="text" id="editProdName" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1">Price (Rs.)</label>
+                        <input type="number" id="editProdPrice" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-emerald-400 focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1">Stock Left</label>
+                        <input type="number" id="editProdStock" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+                <button onclick="saveEditedProduct()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-2.5 rounded-xl text-xs uppercase tracking-wider">
+                    Update Product
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Loose Oil Modal -->
+    <div id="editLooseModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 hidden backdrop-blur-sm">
+        <div class="bg-darkblue-800 border-2 border-amber-500/50 rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="font-black text-white text-base"><i class="fa-solid fa-pen text-amber-400 mr-2"></i> Edit Loose Item</h3>
+                <button onclick="closeEditLooseModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <input type="hidden" id="editLooseIdx">
+            <div class="space-y-3 text-left">
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1">Loose Item Title</label>
+                    <input type="text" id="editLooseName" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-amber-500">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1">Rate (Rs./Kg)</label>
+                        <input type="number" id="editLooseRate" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-emerald-400 focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1">Stock (Kg)</label>
+                        <input type="number" id="editLooseStock" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-amber-500">
+                    </div>
+                </div>
+                <button onclick="saveEditedLooseItem()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-black py-2.5 rounded-xl text-xs uppercase tracking-wider">
+                    Update Loose Item
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header Navigation -->
+    <header class="bg-darkblue-800 border-b border-slate-700 px-6 py-4 flex flex-wrap justify-between items-center shadow-xl gap-4">
+        <div class="flex items-center space-x-3">
+            <div class="bg-blue-600 p-2.5 rounded-xl text-white text-2xl shadow-lg">
+                <i class="fa-solid fa-chart-line"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 class="text-xl font-extrabold tracking-wide">ADMIN CONTROL PANEL</h1>
+                    <span class="text-[10px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full font-black border border-blue-500/30">ENTERPRISE V3.0</span>
+                </div>
+                <p class="text-xs text-slate-400 font-bold">Multi-Branch Live Alert, Stock, Financial & Monthly Sales Analytics</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-4">
+            <a href="index.html" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-extrabold px-4 py-2.5 rounded-xl shadow transition flex items-center gap-1.5">
+                <i class="fa-solid fa-cash-register"></i> Open POS Terminal
+            </a>
+            <div class="text-right bg-slate-900 px-4 py-2 rounded-xl border border-slate-700">
+                <span class="text-[9px] text-slate-400 block uppercase font-black">System Clock</span>
+                <span id="liveClock" class="text-sm font-bold text-emerald-400">--:--:--</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 p-6 max-w-[1600px] mx-auto w-full space-y-6">
+
+        <!-- Unopened Shops Hourly Alert Section -->
+        <section class="bg-darkblue-800 border border-slate-700 rounded-3xl p-6 shadow-xl space-y-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <div class="bg-rose-600/20 text-rose-400 p-2 rounded-xl border border-rose-500/30">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-black text-rose-400 uppercase tracking-wide">Unopened Shops Hourly Alert</h2>
+                        <p class="text-[11px] text-slate-400">Real-time shift log: Unopened store locations for today</p>
+                    </div>
+                </div>
+                <span id="unopenedCountBadge" class="text-xs font-black bg-rose-500 text-white px-3 py-1 rounded-full shadow">0 Unopened</span>
+            </div>
+            <div id="unopenedAlertsList" class="bg-slate-900/80 p-4 rounded-2xl border border-slate-700/80 text-xs font-bold text-emerald-400 text-center">
+                <i class="fa-solid fa-circle-check mr-1"></i> All active shop branches have been opened and logged in today!
+            </div>
+        </section>
+
+        <!-- KPI Metrics Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-darkblue-800 border border-slate-700 rounded-3xl p-5 shadow-xl space-y-3">
+                <div class="flex justify-between items-center text-slate-400 text-xs font-bold uppercase">
+                    <span>Top Selling Product (Monthly)</span>
+                    <i class="fa-solid fa-trophy text-amber-400"></i>
+                </div>
+                <div id="topSellingCard" class="space-y-1">
+                    <p class="text-lg font-black text-white">No Data</p>
+                    <p class="text-xs text-slate-400">0 sold</p>
+                </div>
+            </div>
+
+            <div class="bg-darkblue-800 border border-slate-700 rounded-3xl p-5 shadow-xl space-y-3">
+                <div class="flex justify-between items-center text-slate-400 text-xs font-bold uppercase">
+                    <span>Lowest Selling Product (Monthly)</span>
+                    <i class="fa-solid fa-chart-line-down text-rose-400"></i>
+                </div>
+                <div id="lowestSellingCard" class="space-y-1">
+                    <p class="text-lg font-black text-white">No Data</p>
+                    <p class="text-xs text-slate-400">0 sold</p>
+                </div>
+            </div>
+
+            <div class="bg-darkblue-800 border border-slate-700 rounded-3xl p-5 shadow-xl space-y-3">
+                <div class="flex justify-between items-center text-slate-400 text-xs font-bold uppercase">
+                    <span>Total Tracked Inventory Items</span>
+                    <i class="fa-solid fa-boxes-stacked text-blue-400"></i>
+                </div>
+                <div class="flex justify-between items-baseline">
+                    <h3 id="totalTrackedCount" class="text-2xl font-black text-white">0</h3>
+                    <span class="text-xs text-slate-400 font-bold">Active Products & Oils</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Packet Products Report Table -->
+        <section class="bg-darkblue-800 border border-slate-700 rounded-3xl p-6 shadow-xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <div>
+                    <h2 class="text-base font-black text-white uppercase"><i class="fa-solid fa-table-list mr-2 text-blue-400"></i> Packet Products Performance & Sales Report</h2>
+                    <p class="text-xs text-slate-400">Monthly branch-wise packet items analytics</p>
+                </div>
+                <span id="reportRecordsCount" class="text-xs font-bold bg-slate-900 border border-slate-700 text-slate-300 px-3 py-1 rounded-xl">0 Records</span>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-slate-300">
+                    <thead class="bg-slate-900 text-slate-400 uppercase font-black text-[10px] tracking-wider border-b border-slate-700">
+                        <tr>
+                            <th class="p-3.5">Product Item</th>
+                            <th class="p-3.5">Branch Location</th>
+                            <th class="p-3.5">Unit Price</th>
+                            <th class="p-3.5">Stock Remaining</th>
+                            <th class="p-3.5">Total Sold</th>
+                            <th class="p-3.5">Total Revenue</th>
+                            <th class="p-3.5 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="monthlyReportTableBody" class="divide-y divide-slate-700/50">
+                        <tr>
+                            <td colspan="7" class="text-center py-8 text-slate-400 font-bold">No packet products added yet. Use the inventory adder below.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Loose Oils Report Table -->
+        <section class="bg-darkblue-800 border border-slate-700 rounded-3xl p-6 shadow-xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <div>
+                    <h2 class="text-base font-black text-amber-400 uppercase"><i class="fa-solid fa-scale-balanced mr-2"></i> Loose Oils & Items Inventory Report</h2>
+                    <p class="text-xs text-slate-400">Live stock tracking and total sales for Khula Tail / Ghee items</p>
+                </div>
+                <span id="looseReportCountBadge" class="text-xs font-bold bg-slate-900 border border-slate-700 text-slate-300 px-3 py-1 rounded-xl">0 Items</span>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-slate-300">
+                    <thead class="bg-slate-900 text-slate-400 uppercase font-black text-[10px] tracking-wider border-b border-slate-700">
+                        <tr>
+                            <th class="p-3.5">Loose Item Title</th>
+                            <th class="p-3.5">Rate (Rs./Kg)</th>
+                            <th class="p-3.5">Stock Remaining (Kg)</th>
+                            <th class="p-3.5">Total Revenue Generated</th>
+                            <th class="p-3.5 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="looseReportTableBody" class="divide-y divide-slate-700/50">
+                        <tr>
+                            <td colspan="5" class="text-center py-6 text-slate-400 font-bold">No loose items configured.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Management Cards Grid (Add Forms) -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- 1. Register Branch Card -->
+            <div class="bg-darkblue-800 border border-slate-700 rounded-3xl p-6 shadow-xl space-y-4 flex flex-col justify-between">
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                        <h3 class="text-sm font-black text-white uppercase"><i class="fa-solid fa-store mr-2 text-emerald-400"></i> Register Branch & PIN</h3>
+                        <span id="registeredBranchesCountBadge" class="text-xs font-bold bg-emerald-500/20 text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-500/30">0 Configured</span>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 mb-1">Shop / Branch Name</label>
+                            <input type="text" id="branchNameInput" placeholder="e.g. North Karachi Branch" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white font-bold focus:outline-none focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 mb-1">POS PIN / Password</label>
+                            <input type="password" id="branchPasswordInput" placeholder="e.g. 1001" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white font-bold focus:outline-none focus:border-emerald-500">
+                        </div>
+                        <button onclick="registerBranch()" class="w-full bg-pink-600 hover:bg-pink-500 text-white font-black py-3 rounded-xl shadow-lg transition text-xs tracking-wider uppercase">
+                            <i class="fa-solid fa-plus-circle mr-1"></i> Save Branch Configuration
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-4 border-t border-slate-700 space-y-2">
+                    <span class="text-[10px] font-black uppercase text-slate-400 block">Active Registered Branches:</span>
+                    <div id="activeBranchesList" class="space-y-1.5 max-h-36 overflow-y-auto">
+                        <p class="text-xs text-slate-400 italic">No branches registered.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. ADD PACKET ITEM CARD -->
+            <div class="bg-darkblue-800 border border-slate-700 rounded-3xl p-6 shadow-xl space-y-4">
+                <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                    <h3 class="text-sm font-black text-white uppercase"><i class="fa-solid fa-box mr-2 text-emerald-400"></i> Add Packet Item</h3>
+                </div>
+
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1">Select Target Branch</label>
+                        <select id="targetBranchSelect" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-amber-400 font-bold focus:outline-none focus:border-emerald-500">
+                            <option value="">Register shop first</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1">Enter Product Title & Size</label>
+                        <input type="text" id="packetTitleInput" placeholder="e.g. KTC Sunflower 5L" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white font-bold focus:outline-none focus:border-emerald-500">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 mb-1">Price (Rs.)</label>
+                            <input type="number" id="packetPriceInput" placeholder="540" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white font-bold focus:outline-none focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 mb-1">Stock Units</label>
+                            <input type="number" id="packetStockInput" placeholder="50" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white font-bold focus:outline-none focus:border-emerald-500">
+                        </div>
+                    </div>
+
+                    <button onclick="addPacketItem()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl shadow-lg transition text-xs tracking-wider uppercase">
+                        <i class="fa-solid fa-plus mr-1"></i> + Add To Branch Inventory
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3. Loose Oil Items Manager Card -->
+            <div class="bg-darkblue-800 border border-slate-700 rounded-3xl p-6 shadow-xl space-y-4 flex flex-col justify-between">
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                        <h3 class="text-sm font-black text-white uppercase"><i class="fa-solid fa-oil-can mr-2 text-amber-400"></i> Loose Oil Items Manager</h3>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 mb-1">Loose Oil Title</label>
+                            <input type="text" id="looseOilTitle" placeholder="e.g. Sarso Ka Tail" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white font-bold focus:outline-none focus:border-emerald-500">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-300 mb-1">Price (Rs./Kg)</label>
+                                <input type="number" id="looseOilRate" placeholder="560" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white font-bold focus:outline-none focus:border-emerald-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-300 mb-1">Stock (Kg)</label>
+                                <input type="number" id="looseOilStock" placeholder="100" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white font-bold focus:outline-none focus:border-emerald-500">
+                            </div>
+                        </div>
+
+                        <button onclick="saveLooseOilItem()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-black py-3 rounded-xl shadow-lg transition text-xs tracking-wider uppercase">
+                            <i class="fa-solid fa-floppy-disk mr-1"></i> Save Loose Item
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-4 border-t border-slate-700 space-y-2">
+                    <span class="text-[10px] font-black uppercase text-slate-400 block">Active POS Loose Oils Dropdown:</span>
+                    <div id="activeLooseOilsList" class="space-y-1.5 max-h-28 overflow-y-auto">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Multi-Branch Financial Monitor -->
+        <section class="bg-darkblue-800 border border-slate-700 rounded-3xl p-6 shadow-xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <div>
+                    <h2 class="text-base font-black text-white uppercase"><i class="fa-solid fa-building-columns mr-2 text-indigo-400"></i> Multi-Branch Live Stock & Financial Monitor</h2>
+                    <p class="text-xs text-slate-400">Daily, Monthly Cash Automated Data Reset & Cumulative Annual Revenue</p>
+                </div>
+                <button onclick="location.reload()" class="bg-slate-900 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-bold px-3 py-2 rounded-xl transition flex items-center gap-1">
+                    <i class="fa-solid fa-rotate"></i> Refresh Monitor
+                </button>
+            </div>
+
+            <div id="multiBranchFinancialGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <p class="text-xs text-slate-400 italic col-span-full text-center py-6">No shop branches registered yet.</p>
+            </div>
+        </section>
+
+        <!-- Audit Activity Logs -->
+        <section class="bg-darkblue-800 border border-slate-700 rounded-3xl p-6 shadow-xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-clock-rotate-left text-blue-400"></i>
+                    <h2 class="text-sm font-black text-white uppercase">Multi-Shop Real-Time Activity Logs</h2>
+                </div>
+                <button onclick="clearAuditLogs()" class="text-xs font-bold text-rose-400 hover:underline">Clear Audit Logs</button>
+            </div>
+            <div id="activityLogsContainer" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                <p class="text-xs text-slate-400 italic text-center py-4">No terminal sign-in activity recorded yet.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+                // @ts-nocheck
+                setInterval(() => {
+                    document.getElementById('liveClock').innerText = new Date().toLocaleTimeString();
+                }, 1000);
+
+                window.onload = function() {
+                    loadRegisteredShops();
+                    loadLooseOilsManager();
+                    renderDashboardAnalytics();
+                    renderUnopenedAlerts();
+                    renderActivityLogs();
+                };
+
+                function registerBranch() {
+                    const name = document.getElementById('branchNameInput').value.trim();
+                    const password = document.getElementById('branchPasswordInput').value.trim();
+
+                    if (!name || !password) {
+                        alert("Please enter both Branch Name and PIN/Password!");
+                        return;
+                    }
+
+                    let shops = JSON.parse(localStorage.getItem('multiShopRegistry')) || [];
+                    const newShopId = 'shop_' + Date.now();
+                    shops.push({ id: newShopId, name: name, password: password });
+                    localStorage.setItem('multiShopRegistry', JSON.stringify(shops));
+
+                    document.getElementById('branchNameInput').value = '';
+                    document.getElementById('branchPasswordInput').value = '';
+
+                    alert("✅ Branch Registered Successfully!");
+                    loadRegisteredShops();
+                    renderDashboardAnalytics();
+                    renderUnopenedAlerts();
+                }
+
+                function loadRegisteredShops() {
+                    const shops = JSON.parse(localStorage.getItem('multiShopRegistry')) || [];
+                    const targetSelect = document.getElementById('targetBranchSelect');
+                    const listContainer = document.getElementById('activeBranchesList');
+
+                    document.getElementById('registeredBranchesCountBadge').innerText = `${shops.length} Configured`;
+
+                    if (shops.length === 0) {
+                        targetSelect.innerHTML = `<option value="">Register shop first</option>`;
+                        listContainer.innerHTML = `<p class="text-xs text-slate-400 italic">No branches registered.</p>`;
+                        return;
+                    }
+
+                    targetSelect.innerHTML = shops.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+                    listContainer.innerHTML = shops.map(s => `
+                        <div class="bg-slate-900 p-2 rounded-xl border border-slate-700 flex justify-between items-center text-xs">
+                            <div>
+                                <span class="font-bold text-white">${s.name}</span>
+                                <span class="text-[10px] text-slate-400 block">PIN: ${s.password}</span>
+                            </div>
+                            <button onclick="deleteShop('${s.id}')" class="text-rose-400 hover:text-rose-300 p-1">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    `).join('');
+                }
+
+                function deleteShop(id) {
+                    if (!confirm("Are you sure you want to delete this branch?")) return;
+                    let shops = JSON.parse(localStorage.getItem('multiShopRegistry')) || [];
+                    shops = shops.filter(s => s.id !== id);
+                    localStorage.setItem('multiShopRegistry', JSON.stringify(shops));
+                    loadRegisteredShops();
+                    renderDashboardAnalytics();
+                    renderUnopenedAlerts();
+                }
+
+                function addPacketItem() {
+                    const shopId = document.getElementById('targetBranchSelect').value;
+                    const name = document.getElementById('packetTitleInput').value.trim();
+                    const price = parseFloat(document.getElementById('packetPriceInput').value) || 0;
+                    const stock = parseInt(document.getElementById('packetStockInput').value) || 0;
+
+                    if (!shopId) {
+                        alert("Please select a target branch first!");
+                        return;
+                    }
+                    if (!name || price <= 0 || stock <= 0) {
+                        alert("Please fill in valid product details!");
+                        return;
+                    }
+
+                    let products = JSON.parse(localStorage.getItem('customShopProducts')) || [];
+                    products.push({
+                        id: 'prod_' + Date.now(),
+                        shopId: shopId,
+                        name: name,
+                        price: price,
+                        left: stock,
+                        sold: 0
+                    });
+                    localStorage.setItem('customShopProducts', JSON.stringify(products));
+
+                    document.getElementById('packetTitleInput').value = '';
+                    document.getElementById('packetPriceInput').value = '';
+                    document.getElementById('packetStockInput').value = '';
+
+                    alert("✅ Product added to branch inventory!");
+                    renderDashboardAnalytics();
+                }
+
+                function openEditModal(id) {
+                    let products = JSON.parse(localStorage.getItem('customShopProducts')) || [];
+                    let p = products.find(prod => prod.id === id);
+                    if (!p) return;
+
+                    document.getElementById('editProdId').value = p.id;
+                    document.getElementById('editProdName').value = p.name;
+                    document.getElementById('editProdPrice').value = p.price;
+                    document.getElementById('editProdStock').value = p.left;
+                    document.getElementById('editProductModal').classList.remove('hidden');
+                }
+
+                function closeEditModal() {
+                    document.getElementById('editProductModal').classList.add('hidden');
+                }
+
+                function saveEditedProduct() {
+                    let id = document.getElementById('editProdId').value;
+                    let name = document.getElementById('editProdName').value.trim();
+                    let price = parseFloat(document.getElementById('editProdPrice').value) || 0;
+                    let left = parseInt(document.getElementById('editProdStock').value) || 0;
+
+                    let products = JSON.parse(localStorage.getItem('customShopProducts')) || [];
+                    let p = products.find(prod => prod.id === id);
+                    if (p) {
+                        p.name = name;
+                        p.price = price;
+                        p.left = left;
+                        localStorage.setItem('customShopProducts', JSON.stringify(products));
+                    }
+
+                    closeEditModal();
+                    renderDashboardAnalytics();
+                }
+
+                function openEditLooseModal(index) {
+                    let looseOils = JSON.parse(localStorage.getItem('customLooseOils')) || [];
+                    let o = looseOils[index];
+                    if (!o) return;
+
+                    document.getElementById('editLooseIdx').value = index;
+                    document.getElementById('editLooseName').value = o.name;
+                    document.getElementById('editLooseRate').value = o.rate;
+                    document.getElementById('editLooseStock').value = o.stock;
+                    document.getElementById('editLooseModal').classList.remove('hidden');
+                }
+
+                function closeEditLooseModal() {
+                    document.getElementById('editLooseModal').classList.add('hidden');
+                }
+
+                function saveEditedLooseItem() {
+                    let index = parseInt(document.getElementById('editLooseIdx').value);
+                    let name = document.getElementById('editLooseName').value.trim();
+                    let rate = parseFloat(document.getElementById('editLooseRate').value) || 0;
+                    let stock = parseFloat(document.getElementById('editLooseStock').value) || 0;
+
+                    let looseOils = JSON.parse(localStorage.getItem('customLooseOils')) || [];
+                    if (looseOils[index]) {
+                        looseOils[index].name = name;
+                        looseOils[index].rate = rate;
+                        looseOils[index].stock = stock;
+                        localStorage.setItem('customLooseOils', JSON.stringify(looseOils));
+                    }
+
+                    closeEditLooseModal();
+                    loadLooseOilsManager();
+                    renderDashboardAnalytics();
+                }
+
+                function saveLooseOilItem() {
+                    const title = document.getElementById('looseOilTitle').value.trim();
+                    const rate = parseFloat(document.getElementById('looseOilRate').value) || 0;
+                    const stock = parseFloat(document.getElementById('looseOilStock').value) || 0;
+
+                    if (!title || rate <= 0 || stock <= 0) {
+                        alert("Please enter valid loose oil details!");
+                        return;
+                    }
+
+                    let looseOils = JSON.parse(localStorage.getItem('customLooseOils')) || [
+                        { id: 'loose_1', name: 'Sarson Ka Tail', rate: 500, stock: 100 },
+                        { id: 'loose_2', name: 'Pakwan Tail', rate: 480, stock: 100 },
+                        { id: 'loose_3', name: 'Desi Ghee', rate: 520, stock: 100 }
+                    ];
+
+                    looseOils.push({
+                        id: 'loose_' + Date.now(),
+                        name: title,
+                        rate: rate,
+                        stock: stock,
+                        soldAmount: 0
+                    });
+
+                    localStorage.setItem('customLooseOils', JSON.stringify(looseOils));
+
+                    document.getElementById('looseOilTitle').value = '';
+                    document.getElementById('looseOilRate').value = '';
+                    document.getElementById('looseOilStock').value = '';
+
+                    alert("✅ Loose Oil Item Saved!");
+                    loadLooseOilsManager();
+                    renderDashboardAnalytics();
+                }
+
+                function loadLooseOilsManager() {
+                    const container = document.getElementById('activeLooseOilsList');
+                    const looseOils = JSON.parse(localStorage.getItem('customLooseOils')) || [
+                        { id: 'loose_1', name: 'Sarson Ka Tail', rate: 500, stock: 100 },
+                        { id: 'loose_2', name: 'Pakwan Tail', rate: 480, stock: 100 },
+                        { id: 'loose_3', name: 'Desi Ghee', rate: 520, stock: 100 }
+                    ];
+
+                    container.innerHTML = looseOils.map((o, idx) => `
+                        <div class="bg-slate-900 p-2 rounded-xl border border-slate-700 flex justify-between items-center text-xs">
+                            <div>
+                                <span class="font-bold text-white">${o.name}</span>
+                                <span class="text-[10px] text-slate-400 block">Rs. ${o.rate}/Kg | Stock: ${o.stock} Kg</span>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <button onclick="openEditLooseModal(${idx})" class="text-amber-400 hover:text-amber-300 p-1">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button onclick="deleteLooseItem(${idx})" class="text-rose-400 hover:text-rose-300 p-1">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                function deleteLooseItem(index) {
+                    if (!confirm("Are you sure you want to delete this loose item?")) return;
+                    let looseOils = JSON.parse(localStorage.getItem('customLooseOils')) || [];
+                    looseOils.splice(index, 1);
+                    localStorage.setItem('customLooseOils', JSON.stringify(looseOils));
+                    loadLooseOilsManager();
+                    renderDashboardAnalytics();
+                }
+
+                function renderDashboardAnalytics() {
+                    const products = JSON.parse(localStorage.getItem('customShopProducts')) || [];
+                    const looseOils = JSON.parse(localStorage.getItem('customLooseOils')) || [];
+                    const shops = JSON.parse(localStorage.getItem('multiShopRegistry')) || [];
+                    const dailyRevenueMap = JSON.parse(localStorage.getItem('shopDailyRevenues')) || {};
+                    const monthlyRevenueMap = JSON.parse(localStorage.getItem('shopMonthlyRevenues')) || {};
+
+                    document.getElementById('totalTrackedCount').innerText = products.length + looseOils.length;
+                    document.getElementById('reportRecordsCount').innerText = `${products.length} Records`;
+                    document.getElementById('looseReportCountBadge').innerText = `${looseOils.length} Items`;
+
+                    // 1. Packet Products Table
+                    const tbody = document.getElementById('monthlyReportTableBody');
+                    if (products.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400 font-bold">No packet products added yet. Use the inventory adder below.</td></tr>`;
+                    } else {
+                        tbody.innerHTML = products.map(p => {
+                            const branch = shops.find(s => s.id === p.shopId);
+                            const branchName = branch ? branch.name : 'Unknown Branch';
+                            const totalRevenue = p.sold * p.price;
+                            const stockColor = p.left <= 5 ? "bg-rose-500/20 text-rose-400 border-rose-500/30" : "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
+
+                            return `
+                                <tr class="hover:bg-slate-900/50 transition">
+                                    <td class="p-3 font-bold text-white flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-blue-500"></span> ${p.name}
+                                    </td>
+                                    <td class="p-3 text-slate-300">${branchName}</td>
+                                    <td class="p-3 text-emerald-400 font-bold">Rs. ${p.price.toLocaleString()}</td>
+                                    <td class="p-3"><span class="${stockColor} font-black px-2 py-0.5 rounded border text-[10px]">${p.left} left</span></td>
+                                    <td class="p-3 text-blue-400 font-bold">${p.sold}</td>
+                                    <td class="p-3 text-emerald-400 font-black">Rs. ${totalRevenue.toLocaleString()}</td>
+                                    <td class="p-3 text-right space-x-2">
+                                        <button onclick="openEditModal('${p.id}')" class="text-indigo-400 hover:text-indigo-300 p-1" title="Edit Item">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </button>
+                                        <button onclick="deleteProduct('${p.id}')" class="text-rose-400 hover:text-rose-300 p-1" title="Delete Item">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('');
+                    }
+
+                    // 2. Loose Oils Table (Ensuring soldAmount/revenue displays correctly)
+                    const looseTbody = document.getElementById('looseReportTableBody');
+                    if (looseOils.length === 0) {
+                        looseTbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-400 font-bold">No loose items configured.</td></tr>`;
+                    } else {
+                        looseTbody.innerHTML = looseOils.map((o, idx) => {
+                            const soldRev = o.soldAmount || o.totalRevenue || 0;
+                            const stockColor = o.stock <= 5 ? "bg-rose-500/20 text-rose-400 border-rose-500/30" : "bg-amber-500/20 text-amber-400 border-amber-500/30";
+
+                            return `
+                                <tr class="hover:bg-slate-900/50 transition">
+                                    <td class="p-3 font-bold text-white flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-amber-500"></span> ${o.name} (Khula Tail / Ghee)
+                                    </td>
+                                    <td class="p-3 text-emerald-400 font-bold">Rs. ${o.rate.toLocaleString()} / Kg</td>
+                                    <td class="p-3"><span class="${stockColor} font-black px-2 py-0.5 rounded border text-[10px]">${o.stock} Kg left</span></td>
+                                    <td class="p-3 text-emerald-400 font-black">Rs. ${soldRev.toLocaleString()}</td>
+                                    <td class="p-3 text-right space-x-2">
+                                        <button onclick="openEditLooseModal(${idx})" class="text-amber-400 hover:text-amber-300 p-1" title="Edit Loose Item">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </button>
+                                        <button onclick="deleteLooseItem(${idx})" class="text-rose-400 hover:text-rose-300 p-1" title="Delete Loose Item">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('');
+                    }
+
+                    // Analytics for Top & Lowest Selling Products
+                    let allAnalyticsItems = [];
+                    products.forEach(p => allAnalyticsItems.push({ name: p.name, revenue: p.sold * p.price, soldText: `${p.sold} units sold` }));
+                    looseOils.forEach(o => {
+                        let rev = o.soldAmount || o.totalRevenue || 0;
+                        allAnalyticsItems.push({ name: `${o.name} (Loose)`, revenue: rev, soldText: `Revenue: Rs. ${rev.toLocaleString()}` });
+                    });
+
+                    if (allAnalyticsItems.length > 0) {
+                        let sortedByRev = [...allAnalyticsItems].sort((a, b) => b.revenue - a.revenue);
+                        let topProd = sortedByRev[0];
+                        let lowProd = sortedByRev[sortedByRev.length - 1];
+
+                        document.getElementById('topSellingCard').innerHTML = `
+                            <p class="text-lg font-black text-white">${topProd.name}</p>
+                            <p class="text-xs text-emerald-400 font-bold">${topProd.soldText} (Rs. ${topProd.revenue.toLocaleString()})</p>
+                        `;
+
+                        document.getElementById('lowestSellingCard').innerHTML = `
+                            <p class="text-lg font-black text-white">${lowProd.name}</p>
+                            <p class="text-xs text-rose-400 font-bold">${lowProd.soldText} (Rs. ${lowProd.revenue.toLocaleString()})</p>
+                        `;
+                    }
+
+                    // Financial Monitor Grid
+                    const financialGrid = document.getElementById('multiBranchFinancialGrid');
+                    if (shops.length === 0) {
+                        financialGrid.innerHTML = `<p class="text-xs text-slate-400 italic col-span-full text-center py-6">No shop branches registered yet.</p>`;
+                    } else {
+                        financialGrid.innerHTML = shops.map(s => {
+                            const dailyRev = dailyRevenueMap[s.name] || 0;
+                            const monthlyRev = monthlyRevenueMap[s.name] || 0;
+                            return `
+                                <div class="bg-slate-900 p-4 rounded-2xl border border-slate-700 space-y-3 shadow-inner">
+                                    <div class="flex justify-between items-center">
+                                        <h3 class="font-bold text-white text-sm"><i class="fa-solid fa-store mr-1 text-emerald-400"></i> ${s.name}</h3>
+                                        <span class="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700">PIN: ${s.password}</span>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
+                                        <div>
+                                            <span class="text-[9px] text-slate-400 block uppercase font-black">Daily</span>
+                                            <span class="text-sm font-black text-emerald-400">Rs. ${dailyRev.toLocaleString()}</span>
+                                        </div>
+                                        <div>
+                                            <span class="text-[9px] text-slate-400 block uppercase font-black">Monthly</span>
+                                            <span class="text-sm font-black text-blue-400">Rs. ${monthlyRev.toLocaleString()}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                    }
+                }
+
+                function deleteProduct(id) {
+                    if (!confirm("Are you sure you want to delete this product?")) return;
+                    let products = JSON.parse(localStorage.getItem('customShopProducts')) || [];
+                    products = products.filter(p => p.id !== id);
+                    localStorage.setItem('customShopProducts', JSON.stringify(products));
+                    renderDashboardAnalytics();
+                }
+
+                function renderUnopenedAlerts() {
+                    const shops = JSON.parse(localStorage.getItem('multiShopRegistry')) || [];
+                    const logs = JSON.parse(localStorage.getItem('shopOpeningLogs')) || [];
+                    const container = document.getElementById('unopenedAlertsList');
+                    const todayStr = new Date().toLocaleDateString();
+
+                    const openedShopsToday = new Set(logs.filter(l => l.date === todayStr && l.type === 'OPENED').map(l => l.shopName));
+                    const unopenedShops = shops.filter(s => !openedShopsToday.has(s.name));
+
+                    document.getElementById('unopenedCountBadge').innerText = `${unopenedShops.length} Unopened`;
+
+                    if (unopenedShops.length === 0) {
+                        container.innerHTML = `<div class="text-xs font-bold text-emerald-400"><i class="fa-solid fa-circle-check mr-1"></i> All active shop branches have been opened and logged in today!</div>`;
+                    } else {
+                        container.innerHTML = unopenedShops.map(s => `
+                            <div class="flex justify-between items-center bg-rose-950/40 border border-rose-500/30 p-2.5 rounded-xl text-xs text-rose-300 font-bold mb-2">
+                                <span><i class="fa-solid fa-triangle-exclamation mr-1"></i> ${s.name} branch has not been unlocked yet today</span>
+                                <span class="bg-rose-600 text-white px-2 py-0.5 rounded text-[10px]">PENDING</span>
+                            </div>
+                        `).join('');
+                    }
+                }
+
+                function renderActivityLogs() {
+                    const logs = JSON.parse(localStorage.getItem('shopOpeningLogs')) || [];
+                    const container = document.getElementById('activityLogsContainer');
+
+                    if (logs.length === 0) {
+                        container.innerHTML = `<p class="text-xs text-slate-400 italic text-center py-4">No terminal sign-in activity recorded yet.</p>`;
+                        return;
+                    }
+
+                    container.innerHTML = logs.map(l => {
+                        const badgeColor = l.type === 'OPENED' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border-rose-500/30';
+                        return `
+                            <div class="bg-slate-900 p-3 rounded-xl border border-slate-700 flex justify-between items-center text-xs">
+                                <span class="font-bold text-white">${l.shopName} (${l.date} at ${l.time})</span>
+                                <span class="${badgeColor} font-black px-2.5 py-1 rounded border text-[10px]">${l.type}</span>
+                            </div>
+                        `;
+                    }).join('');
+                }
+
+                function clearAuditLogs() {
+                    if (!confirm("Are you sure you want to clear audit logs?")) return;
+                    localStorage.removeItem('shopOpeningLogs');
+                    renderActivityLogs();
+                    renderUnopenedAlerts();
+                }
+    </script>
+</body>
+</html>
