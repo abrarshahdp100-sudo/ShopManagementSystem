@@ -64,7 +64,6 @@ C:\Users\ADMIN\Desktop\Shop\Shop\obj\Debug\net10.0\staticwebassets.build.json.ca
 C:\Users\ADMIN\Desktop\Shop\Shop\obj\Debug\net10.0\staticwebassets.development.json
 C:\Users\ADMIN\Desktop\Shop\Shop\obj\Debug\net10.0\staticwebassets.build.endpoints.json
 C:\Users\ADMIN\Desktop\Shop\Shop\obj\Debug\net10.0\swae.build.ex.cache
-C:\Users\ADMIN\Desktop\Shop\Shop\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt
 C:\Users\ADMIN\Desktop\Shop\Shop\obj\Debug\net10.0\Shop.csproj.Up2Date
 C:\Users\ADMIN\Desktop\Shop\Shop\obj\Debug\net10.0\Shop.dll
 C:\Users\ADMIN\Desktop\Shop\Shop\obj\Debug\net10.0\refint\Shop.dll
@@ -159,3 +158,4 @@ C:\Users\ADMIN\Desktop\Shop\Shop\bin\Debug\net10.0\Swashbuckle.AspNetCore.Swagge
 C:\Users\ADMIN\Desktop\Shop\Shop\bin\Debug\net10.0\Shop.staticwebassets.runtime.json
 C:\Users\ADMIN\Desktop\Shop\Shop\obj\Debug\net10.0\compressed\2xw4zfkiya-{0}-blhd5to3kd-blhd5to3kd.gz
 C:\Users\ADMIN\Desktop\Shop\Shop\obj\Debug\net10.0\compressed\5343zxtue6-{0}-jrtlkn52ud-jrtlkn52ud.gz
+C:\Users\ADMIN\Desktop\Shop\Shop\obj\Debug\net10.0\Shop.sourcelink.json
